@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/two.js/0.7.2/two.min.js"></script>
+    <style>
+      #myCanvas {
+        width: 500px;
+        height: 500px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="myCanvas"></div>
+    <script>
+      // Create a Two.js instance
+      const two = new Two({
+        type: Two.Types.canvas,
+        width: 500,
+        height: 500
+      }).appendTo(document.getElementById('myCanvas'));
+
+      // Create the bars to represent the elevation map
+      const elevation = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1];
+      const barWidth = 50;
+      const barHeight = 20;
+      const bars = [];
+      for (let i = 0; i < elevation.length; i++) {
+        const bar = two.makeRectangle(i * barWidth + barWidth / 2, two.height - elevation[i] * barHeight, barWidth, elevation[i] * barHeight);
+        bar.fill = 'blue';
+        bars.push(bar);
+      }
+
+      // Initialize trapped water area
+      let trappedWater = 0;
+
+      // Use two.js animation features to simulate the filling of the trapped water over time
+      two.bind('update', function(frameCount) {
+        // Calculate trapped water
+        let left = 0;
+        let right = elevation.length - 1;
+        let leftMax = 0;
+        let rightMax = 0;
+        while (left < right) {
+          if (elevation[left] < elevation[right]) {
+            if (elevation[left] > leftMax) {
+              leftMax = elevation[left];
+            } else {
+              trappedWater += leftMax - elevation[left];
+            }
+            left++;
+          } else {
+            if (elevation[right] > rightMax) {
+              rightMax = elevation[right];
+            } else {
+              trappedWater += rightMax - elevation[right];
+            }
+            right--;
+          }
+        }
+
+        // Fill trapped water with different color
+        if (trappedWater > 0) {
+          const trappedBar = two.makeRectangle(0, two.height - trappedWater * barHeight, elevation.length * barWidth, trappedWater * barHeight);
+          trappedBar.fill = 'green';
+          trappedBar.opacity = 0.5;
+        }
+
+        two.update();
+      });
+
+      two.play();
+    </script>
+  </body>
+</html>
